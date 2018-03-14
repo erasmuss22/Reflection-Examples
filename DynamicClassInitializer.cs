@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Reflection;
 using System.Reflection.Emit;
 
@@ -11,6 +12,8 @@ namespace DataDriven
         private static Dictionary<string, Type> dynamicTypesByName = new Dictionary<string, Type>(StringComparer.CurrentCultureIgnoreCase);
         private static AssemblyBuilder assemblyBuilder;
         private static ModuleBuilder moduleBuilder;
+
+        private static Dictionary<Type, Func<BaseObject>> creatorsByType = new Dictionary<Type, Func<BaseObject>>();
 
         public static bool IsInitialized { get; private set; }
 
@@ -37,6 +40,11 @@ namespace DataDriven
                 CreateType(dynamicClass);
             }
 
+            foreach (Type type in dynamicTypesByName.Values)
+            {
+                creatorsByType[type] = Expression.Lambda<Func<BaseObject>>(Expression.New(type)).Compile();
+            }
+
             IsInitialized = true;
         }
 
@@ -45,6 +53,19 @@ namespace DataDriven
             if (dynamicTypesByName.ContainsKey(typeName))
             {
                 return (BaseObject)Activator.CreateInstance(dynamicTypesByName[typeName]);
+            }
+
+            return null;
+        }
+
+        public static BaseObject CreateObjectInstanceByNameLambda(string typeName)
+        {
+            if (dynamicTypesByName.ContainsKey(typeName))
+            {
+                Type type = dynamicTypesByName[typeName];
+                if (creatorsByType.ContainsKey(type)) {
+                    return creatorsByType[type]();
+                }
             }
 
             return null;
