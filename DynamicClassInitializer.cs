@@ -13,6 +13,8 @@ namespace DataDriven
         private static AssemblyBuilder assemblyBuilder;
         private static ModuleBuilder moduleBuilder;
 
+        private static Dictionary<string, Func<BaseObject>> creatorsByName = new Dictionary<string, Func<BaseObject>>();
+
         private static Dictionary<Type, Func<BaseObject>> creatorsByType = new Dictionary<Type, Func<BaseObject>>();
 
         public static bool IsInitialized { get; private set; }
@@ -40,9 +42,13 @@ namespace DataDriven
                 CreateType(dynamicClass);
             }
 
-            foreach (Type type in dynamicTypesByName.Values)
+            foreach (KeyValuePair<string, Type> kvp in dynamicTypesByName)
             {
-                creatorsByType[type] = Expression.Lambda<Func<BaseObject>>(Expression.New(type)).Compile();
+                creatorsByName[kvp.Key] = Expression.Lambda<Func<BaseObject>>(Expression.New(kvp.Value)).Compile();
+                creatorsByName[kvp.Key]();
+
+                creatorsByType[kvp.Value] = Expression.Lambda<Func<BaseObject>>(Expression.New(kvp.Value)).Compile();
+                creatorsByType[kvp.Value]();
             }
 
             IsInitialized = true;
@@ -60,10 +66,20 @@ namespace DataDriven
 
         public static BaseObject CreateObjectInstanceByNameLambda(string typeName)
         {
-            if (dynamicTypesByName.ContainsKey(typeName))
+            if (creatorsByName.ContainsKey(typeName))
             {
+                return creatorsByName[typeName]();
+            }
+
+            return null;
+        }
+
+        public static BaseObject CreateObjectInstanceByTypeNameLambda(string typeName)
+        {
+            if (dynamicTypesByName.ContainsKey(typeName)) {
                 Type type = dynamicTypesByName[typeName];
-                if (creatorsByType.ContainsKey(type)) {
+                if (creatorsByType.ContainsKey(type))
+                {
                     return creatorsByType[type]();
                 }
             }

@@ -5,6 +5,7 @@ namespace DataDriven
 {
     class Program
     {
+        public static readonly int Iterations = 100000;
         static void Main(string[] args)
         {
             DynamicClass addressCLass = new DynamicClass()
@@ -34,6 +35,8 @@ namespace DataDriven
 
             Example1.Execute();
             Example2.Execute();
+            Example3.Execute();
+            Example3A.Execute();
         }
     }
 }
