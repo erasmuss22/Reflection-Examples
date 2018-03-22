@@ -37,6 +37,10 @@ namespace DataDriven
             Example2.Execute();
             Example3.Execute();
             Example3A.Execute();
+            Example4.Execute();
+            Example5.Execute();
+            Example5A.Execute();
+            Example6.Execute();
         }
     }
 }

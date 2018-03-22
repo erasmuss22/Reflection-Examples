@@ -11,11 +11,8 @@ namespace DataDriven
 
             for (int i = 0; i < Program.Iterations; i++) {
                 Person person = new Person();
-                person.FirstName = "John";
 
                 Address address = new Address();
-                address.Address1 = "1234 Test St";
-                person.Address = address;
             }
 
             stopWatch.Stop();
