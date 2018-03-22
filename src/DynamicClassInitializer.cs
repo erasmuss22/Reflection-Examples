@@ -17,7 +17,7 @@ namespace DataDriven
 
         private static Dictionary<Type, Func<BaseObject>> creatorsByType = new Dictionary<Type, Func<BaseObject>>();
 
-        private static Dictionary<string, Dictionary<string, Action<BaseObject, object>>> settersByTypeNameAndProperty = new Dictionary<string, Dictionary<string, Action<BaseObject, object>>>();
+        private static Dictionary<string, PropertyWrapper> settersByTypeNameAndProperty = new Dictionary<string, PropertyWrapper>();
 
         public static bool IsInitialized { get; private set; }
 
@@ -89,14 +89,12 @@ namespace DataDriven
             return null;
         }
 
-        public static Action<BaseObject, object> GetSetterForObjectProperty(string typeName, string propertyName)
+        public static void SetPropertyForObject(string typeName, string propertyName, BaseObject objInstance, object value)
         {
-            if (settersByTypeNameAndProperty.ContainsKey(typeName) && settersByTypeNameAndProperty[typeName].ContainsKey(propertyName))
+            if (settersByTypeNameAndProperty.ContainsKey(typeName))
             {
-                return settersByTypeNameAndProperty[typeName][propertyName];
+                settersByTypeNameAndProperty[typeName].ExecuteSetter(objInstance, propertyName, value);
             }
-
-            return null;
         }
 
         public static bool DynamicTypeExists(string typeName)
@@ -150,25 +148,7 @@ namespace DataDriven
             // now that the properties are attached, create the type and cache it
             Type objectType = tb.CreateType();
             dynamicTypesByName[dynamicClass.ObjectName] = objectType;
-
-            foreach (var field in dynamicClass.Fields)
-            {
-                var propertyInfo = objectType.GetProperty(field.PropertyName);
-                var instance = Expression.Parameter(propertyInfo.DeclaringType, "objInstance");
-                var argument = Expression.Parameter(typeof(object), "valueToSet");
-
-                var setterCall = Expression.Call(
-                    instance,
-                    propertyInfo.GetSetMethod(),
-                    Expression.Convert(argument, propertyInfo.PropertyType));
-
-                if (!settersByTypeNameAndProperty.ContainsKey(dynamicClass.ObjectName))
-                {
-                    settersByTypeNameAndProperty[dynamicClass.ObjectName] = new Dictionary<string, Action<BaseObject, object>>();
-                }
-
-                settersByTypeNameAndProperty[dynamicClass.ObjectName][field.PropertyName] = (Action<BaseObject, object>)Expression.Lambda(setterCall, instance, argument).Compile();
-            }
+            settersByTypeNameAndProperty[objectType.Name] = PropertyWrapper.CreateFromTypeName(objectType.Name);
         }
 
         private static void CreateProperty(TypeBuilder tb, string propertyName, Type propertyType)

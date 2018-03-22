@@ -12,26 +12,18 @@ namespace DataDriven
             BaseObject person = DynamicClassInitializer.CreateObjectInstanceByName("Person");
             BaseObject address = DynamicClassInitializer.CreateObjectInstanceByName("Address");
 
-            var firstNameProperty = DynamicClassInitializer.GetSetterForObjectProperty("Person", "FirstName");
-            var lastNameProperty = DynamicClassInitializer.GetSetterForObjectProperty("Person", "LastName");
-            var addressProperty = DynamicClassInitializer.GetSetterForObjectProperty("Person", "Address");
-
-            var address1Property = DynamicClassInitializer.GetSetterForObjectProperty("Address", "Address1");
-            var postalCodeProperty = DynamicClassInitializer.GetSetterForObjectProperty("Address", "PostalCode");
-
             for (int i = 0; i < Program.Iterations; i++) {
                 // use compiled and cached actions to set values for each property
-                firstNameProperty(person, "John");
-                lastNameProperty(person, "Smith");
+                DynamicClassInitializer.SetPropertyForObject("Person", "FirstName", person, "John");
+                DynamicClassInitializer.SetPropertyForObject("Person", "LastName", person, "Smith");
 
-                address1Property(address, "1234 Main St");
-                postalCodeProperty(address, "12345");
-
-                addressProperty(person, address);
+                DynamicClassInitializer.SetPropertyForObject("Address", "Address1", address, "1234 Main St");
+                DynamicClassInitializer.SetPropertyForObject("Address", "PostalCode", address, "12345");
+                DynamicClassInitializer.SetPropertyForObject("Person", "Address", person, address);
             }
 
             stopWatch.Stop();
-            
+
             Console.WriteLine("Example 6 setting properties using cached lambdas for setters Elapsed time {0} ms",stopWatch.ElapsedMilliseconds);
         }
     }
